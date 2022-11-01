@@ -75,13 +75,16 @@ function generateCellDouble(
   return c;
 }
 
+type TableCellType = (SingleCell | DoubleCell) & { name: string };
+
 // generates a table from data in flamebearer format
-function generateTable(
-  flamebearer: Flamebearer
-): ((SingleCell | DoubleCell) & { name: string })[] {
-  const table: ((SingleCell | DoubleCell) & { name: string })[] = [];
+function generateTable(flamebearer: Flamebearer): {
+  table: TableCellType[];
+  totalCell?: TableCellType;
+} {
+  const table: TableCellType[] = [];
   if (!flamebearer) {
-    return table;
+    return { table };
   }
   const { names, levels, format } = flamebearer;
   const ff = format !== 'double' ? singleFF : doubleFF;
@@ -105,7 +108,7 @@ function generateTable(
     }
   }
 
-  return Object.values(hash);
+  return { table: Object.values(hash), totalCell: hash.total };
 }
 
 // the value must be negative or zero
@@ -279,9 +282,9 @@ const getTableBody = ({
 }: GetTableBodyRowsProps): TableBodyType => {
   const { numTicks, maxSelf, sampleRate, spyName, units } = flamebearer;
 
-  const tableBodyCells = generateTable(flamebearer).sort(
-    (a, b) => b.total - a.total
-  );
+  const { table, totalCell } = generateTable(flamebearer);
+
+  const tableBodyCells = table.sort((a, b) => b.total - a.total);
   const m = sortByDirection === 'asc' ? 1 : -1;
   let sorted: typeof tableBodyCells;
 
@@ -371,6 +374,8 @@ const getTableBody = ({
               value: (() => (
                 <span title={formatter.format(x.selfLeft, sampleRate)}>
                   {formatter.format(x.selfLeft, sampleRate)}
+                  {/* {(x.selfLeft / maxSelf * 100).toFixed(2) + ' %'} */}
+                  {/* {(x.selfLeft / totalCell.totalLeft * 100).toFixed(2) + ' %'} */}
                 </span>
               ))(),
             },
@@ -386,6 +391,8 @@ const getTableBody = ({
               value: (
                 <span title={formatter.format(x.selfRght, sampleRate)}>
                   {formatter.format(x.selfRght, sampleRate)}
+                  {/* {(x.selfRght / maxSelf * 100).toFixed(2) + ' %'} */}
+                  {/* {(x.selfRght / totalCell.totalRght * 100).toFixed(2) + ' %'} */}
                 </span>
               ),
             },
@@ -414,6 +421,7 @@ const getTableBody = ({
               value: (() => (
                 <span title={formatter.format(x.totalLeft, sampleRate)}>
                   {formatter.format(x.totalLeft, sampleRate)}
+                  {/* {(x.totalLeft / numTicks / 2 * 100).toFixed(2) + ' %'} */}
                 </span>
               ))(),
             },
@@ -429,6 +437,7 @@ const getTableBody = ({
               value: (() => (
                 <span title={formatter.format(x.totalRght, sampleRate)}>
                   {formatter.format(x.totalRght, sampleRate)}
+                  {/* {(x.totalRght / numTicks / 2 * 100).toFixed(2) + ' %'} */}
                 </span>
               ))(),
             },
